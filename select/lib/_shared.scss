@@ -1,0 +1,104 @@
+//
+// Copyright 2023 Google LLC
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// go/keep-sorted start
+@use 'sass:list';
+@use 'sass:map';
+@use 'sass:string';
+// go/keep-sorted end
+// go/keep-sorted start
+@use '../../elevation/lib/elevation';
+@use '../../sass/theme';
+@use '../../tokens';
+// go/keep-sorted end
+
+@mixin theme($tokens) {
+  $reference: tokens.md-comp-outlined-select-values();
+  $tokens: theme.validate-theme($reference, $tokens);
+  $tokens: resolve-tokens($tokens);
+  $tokens: theme.create-theme-vars($tokens, 'select');
+
+  @include theme.emit-theme-vars($tokens);
+}
+
+@mixin styles() {
+  $tokens: resolve-tokens(tokens.md-comp-outlined-select-values());
+  $tokens: theme.create-theme-vars($tokens, 'select');
+
+  :host {
+    @each $token, $value in $tokens {
+      --_#{$token}: #{$value};
+    }
+
+    color: unset;
+    min-width: 210px;
+  }
+
+  .field {
+    cursor: default;
+    outline: none;
+  }
+
+  .select {
+    position: relative;
+  }
+
+  .field,
+  .select {
+    min-width: inherit;
+  }
+
+  :host {
+    display: inline-flex;
+  }
+
+  .label {
+    width: 100%;
+  }
+
+  :host([disabled]) {
+    pointer-events: none;
+  }
+}
+
+@function resolve-tokens($tokens) {
+  @return $tokens;
+}
+
+@function resolve-tokens($tokens) {
+  $select-tokens: remove-unused-tokens($tokens);
+
+  @return $select-tokens;
+}
+
+// removes unused tokens
+@function remove-unused-tokens($tokens) {
+  $unused-tokens: ();
+  $token-parts-to-remove: (
+    // go/keep-sorted start
+    'menu-cascading-menu',
+    'menu-container',
+    'menu-divider',
+    'menu-list-item',
+    'text-field',
+    // go/keep-sorted end
+  );
+
+  @each $part in $token-parts-to-remove {
+    @each $token in map-keys($tokens) {
+      $index: string.index($token, $part);
+
+      @if $index {
+        $unused-tokens: list.append($unused-tokens, $token);
+      }
+    }
+  }
+
+  @each $token in $unused-tokens {
+    $tokens: map.remove($tokens, $token);
+  }
+
+  @return $tokens;
+}
