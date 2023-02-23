@@ -25,8 +25,8 @@ let focusObject: StrongFocus = new FocusGlobal();
 /**
  * Set of keyboard event codes that correspond to keyboard navigation
  */
-const KEYBOARD_NAVIGATION_KEYS =
-    new Set(['Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']);
+const KEYBOARD_NAVIGATION_KEYS = new Set(
+    ['Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']);
 
 function keydownHandler(e: KeyboardEvent) {
   if (KEYBOARD_NAVIGATION_KEYS.has(e.key)) {

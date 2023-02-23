@@ -1,0 +1,407 @@
+//
+// Copyright 2023 Google LLC
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// PUBLIC PROPERTIES
+
+// go/keep-sorted start
+@use 'sass:map';
+// go/keep-sorted end
+// go/keep-sorted start
+@use '../../elevation/lib/elevation';
+@use '../../focus/focus-ring';
+@use '../../ripple/ripple';
+@use '../../sass/color';
+@use '../../sass/shape';
+@use '../../sass/theme';
+@use '../../sass/typography';
+@use '../../sass/var';
+@use '../../tokens';
+
+// go/keep-sorted end
+
+@function remove-unsupported-tokens($tokens) {
+  $unsupported-tokens: (
+    // no focus state layer
+    'active-focus-state-layer-color',
+    'active-focus-state-layer-opacity',
+    'inactive-focus-state-layer-color',
+    'inactive-focus-state-layer-opacity',
+    // TODO (b/261201556) consider elevation with beta vesrion
+    'container-elevation',
+    // include an icon and the size will adjust;
+    // height is 48 and it's 64 with icon
+    'with-icon-and-label-text-container-height'
+  );
+  $tokens: typography.resolve-tokens($tokens, 'with-label-text-label-text');
+  @return map.remove($tokens, $unsupported-tokens...);
+}
+
+$md-sys-color: tokens.md-sys-color-values-light();
+$on-primary: map.get($md-sys-color, 'on-primary');
+
+@function add-tokens($tokens) {
+  $added-tokens: (
+    'navigation-with-icon-active-icon-color': $on-primary,
+    'navigation-with-icon-active-focus-icon-color': $on-primary,
+    'navigation-with-icon-active-hover-icon-color': $on-primary,
+    'navigation-with-icon-active-pressed-icon-color': $on-primary,
+    'navigation-wide-with-icon-active-icon-color': $on-primary,
+    'navigation-wide-with-icon-active-focus-icon-color': $on-primary,
+    'navigation-wide-with-icon-active-hover-icon-color': $on-primary,
+    'navigation-wide-with-icon-active-pressed-icon-color': $on-primary,
+    'navigation-wide-with-label-text-active-label-text-color': $on-primary,
+    'navigation-wide-with-label-text-active-focus-label-text-color': $on-primary,
+    'navigation-wide-with-label-text-active-hover-label-text-color': $on-primary,
+    'navigation-wide-with-label-text-active-pressed-label-text-color':
+      $on-primary,
+    'container-direction': column,
+    'navigation-wide-container-direction': row,
+    'navigation-wide-container-height': 24px,
+  );
+  @return map.merge($tokens, $added-tokens);
+}
+
+$tab-tokens: add-tokens(
+  remove-unsupported-tokens(tokens.md-comp-primary-navigation-tab-values())
+);
+
+@mixin theme($tokens) {
+  $tokens: theme.validate-theme($tab-tokens, $tokens);
+  $tokens: theme.create-theme-vars($tokens, 'tab');
+  @include theme.emit-theme-vars($tokens);
+}
+
+@mixin styles() {
+  $tokens: theme.create-theme-vars($tab-tokens, 'tab');
+
+  :host {
+    @each $token, $value in $tokens {
+      --_#{$token}: #{$value};
+    }
+
+    display: inline-flex;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    vertical-align: middle;
+
+    --md-focus-ring-offset-vertical: calc(
+      -1 * var(--indicator-block-size) - 3px - 1px
+    );
+    --md-focus-ring-offset-horizontal: -3px;
+
+    --indicator-block-size: var(--_active-indicator-height);
+    --indicator-inline-size: auto;
+    --indicator-inset: auto 0 0 0;
+    --focus-shape: 4px;
+
+    @include ripple.theme(
+      (
+        hover-color: var(--_inactive-hover-state-layer-color),
+        pressed-color: var(--_inactive-pressed-state-layer-color),
+        hover-opacity: var(--_inactive-hover-state-layer-opacity),
+        pressed-opacity: var(--_inactive-pressed-state-layer-opacity),
+      )
+    );
+
+    @include focus-ring.theme(
+      (
+        shape: (
+          var(--focus-shape),
+        ),
+      )
+    );
+  }
+
+  :host([selected]) {
+    @include ripple.theme(
+      (
+        hover-color: var(--_active-hover-state-layer-color),
+        pressed-color: var(--_active-pressed-state-layer-color),
+        hover-opacity: var(--_active-hover-state-layer-opacity),
+        pressed-opacity: var(--_active-pressed-state-layer-opacity),
+      )
+    );
+  }
+
+  :host([disabled]) {
+    cursor: default;
+    pointer-events: none;
+    // TODO (b/261201556) implement disabled styling in beta version.
+    opacity: 0.38;
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    user-select: none;
+    -webkit-appearance: none;
+    vertical-align: middle;
+    background: transparent;
+    text-decoration: none;
+    inline-size: 100%;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    z-index: 0; // Place content on top of elevation and ripple
+    font: var(--_with-label-text-label-text-type);
+    background-color: var(--_container-color);
+    color: var(--_with-label-text-inactive-label-text-color);
+
+    // icon styling
+    --md-icon-size: var(--_with-icon-icon-size);
+    --md-icon-color: var(--_with-icon-inactive-icon-color);
+
+    &::-moz-focus-inner {
+      padding: 0;
+      border: 0;
+    }
+
+    &:hover {
+      color: var(--_with-label-text-inactive-hover-label-text-color);
+      --md-icon-color: var(--_with-icon-inactive-hover-icon-color);
+      cursor: pointer;
+    }
+
+    &:focus {
+      color: var(--_with-label-text-inactive-focus-label-text-color);
+      --md-icon-color: var(--_with-icon-inactive-focus-icon-color);
+    }
+
+    &:active {
+      color: var(--_with-label-text-inactive-pressed-label-text-color);
+      --md-icon-color: var(--_with-icon-inactive-pressed-icon-color);
+      outline: none;
+    }
+
+    // TODO (b/261201556) implement disabled styling in beta version.
+    &:disabled {
+      // background-color: var(--_disabled-container-color);
+      // --md-icon-color: var(--_disabled-container-color);
+    }
+
+    // TODO (b/261201556) implement hcm in beta version
+    // @media (forced-colors: active) {
+    //   &::before {
+    //     @include dom.transparent-border();
+    //   }
+    // }
+  }
+
+  :host([selected]) .button {
+    color: var(--_with-label-text-active-label-text-color);
+    --md-icon-color: var(--_with-icon-active-icon-color);
+
+    &:hover {
+      color: var(--_with-label-text-active-hover-label-text-color);
+      --md-icon-color: var(--_with-icon-active-hover-icon-color);
+    }
+
+    &:focus {
+      color: var(--_with-label-text-active-focus-label-text-color);
+      --md-icon-color: var(--_with-icon-active-focus-icon-color);
+    }
+
+    &:active {
+      color: var(--_with-label-text-active-pressed-label-text-color);
+      --md-icon-color: var(--_with-icon-active-pressed-icon-color);
+    }
+
+    // TODO (b/261201556) implement disabled styling in beta version.
+    &:disabled {
+      // --md-icon-color: var(--_disabled-container-color);
+    }
+  }
+
+  .button,
+  md-ripple {
+    border-radius: var(--_container-shape);
+  }
+
+  md-elevation,
+  md-ripple {
+    z-index: -1; // Place behind content
+  }
+
+  md-elevation,
+  .outline {
+    position: absolute;
+    inset: 0;
+  }
+
+  .touch {
+    position: absolute;
+    top: 50%;
+    height: 48px;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+  }
+
+  .content {
+    box-sizing: border-box;
+    inline-size: var(--indicator-inline-size);
+    display: inline-flex;
+    flex-direction: var(--_container-direction);
+    --content-padding: 8px;
+    block-size: calc(var(--_container-height) + 2 * var(--content-padding));
+    align-items: center;
+    justify-content: center;
+    padding: var(--content-padding);
+    gap: 6px;
+    position: relative;
+  }
+
+  .indicator {
+    position: absolute;
+    box-sizing: border-box;
+    block-size: var(--indicator-block-size);
+    min-inline-size: var(--indicator-inline-size);
+    background: var(--_active-indicator-color);
+    border-radius: var(--_active-indicator-shape);
+    inset: var(--indicator-inset);
+    z-index: -1;
+    transform-origin: top left;
+  }
+
+  // secondary
+  :host([variant~='secondary']) {
+    --indicator-block-size: 2px;
+    --indicator-inline-size: 100%;
+    --_active-indicator-shape: 0;
+  }
+
+  // vertical
+  :host([variant~='vertical']) {
+    flex: 0;
+  }
+
+  :host([variant~='vertical']) .content {
+    inline-size: 100%;
+  }
+
+  :host([variant~='vertical']) .button {
+    inline-size: 100%;
+    flex-direction: row;
+  }
+
+  :host([variant~='vertical']:not([variant~='navigation'])) {
+    --md-focus-ring-offset-horizontal: calc(
+      -1 * var(--indicator-inline-size) - 3px - 1px
+    );
+    --md-focus-ring-offset-vertical: -3px;
+  }
+
+  :host([variant~='vertical'][variant~='primary']) {
+    --indicator-block-size: 100%;
+    --indicator-inline-size: 3px;
+    --_active-indicator-shape: 9999px 0 0 9999px;
+    --indicator-inset: 0 0 0 auto;
+  }
+
+  :host([variant~='vertical'][variant~='secondary']) {
+    --indicator-block-size: 100%;
+    --indicator-inline-size: 2px;
+    --indicator-inset: 0 0 0 auto;
+  }
+
+  // navigation variant
+  :host([variant~='navigation']) {
+    --md-focus-ring-offset-vertical: -3px;
+    --_active-indicator-shape: 9999px;
+    --indicator-block-size: 30px;
+    --indicator-inset: calc(2px + 50% - var(--indicator-block-size)) 0 auto 0;
+  }
+
+  :host([variant~='navigation']:not([variant~='wide'])) {
+    --_with-icon-active-icon-color: var(
+      --_navigation-with-icon-active-icon-color
+    );
+    --_with-icon-active-hover-icon-color: var(
+      --_navigation-with-icon-active-hover-icon-color
+    );
+    --_with-icon-active-focus-icon-color: var(
+      --_navigation-with-icon-active-focus-icon-color
+    );
+    --_with-icon-active-pressed-icon-color: var(
+      --_navigation-with-icon-active-pressed-icon-color
+    );
+  }
+
+  :host([variant~='navigation']) .indicator {
+    transform-origin: center;
+  }
+
+  // navigation wide variant
+  :host([variant~='navigation'][variant~='wide']) {
+    --_active-indicator-shape: 9999px;
+    --focus-shape: var(--_active-indicator-shape);
+    --container-direction: row;
+    --indicator-block-size: auto;
+    --indicator-inline-size: 100%;
+    --indicator-inset: 0;
+    --_container-height: var(--_navigation-wide-container-height);
+    --_with-icon-active-icon-color: var(
+      --_navigation-wide-with-icon-active-icon-color
+    );
+    --_with-icon-active-hover-icon-color: var(
+      --_navigation-wide-with-icon-active-hover-icon-color
+    );
+    --_with-icon-active-focus-icon-color: var(
+      --_navigation-wide-with-icon-active-focus-icon-color
+    );
+    --_with-icon-active-pressed-icon-color: var(
+      --_navigation-wide-with-icon-active-pressed-icon-color
+    );
+    --_with-label-text-active-label-text-color: var(
+      --_navigation-wide-with-label-text-active-label-text-color
+    );
+    --_with-label-text-active-hover-label-text-color: var(
+      --_navigation-wide-with-label-text-active-hover-label-text-color
+    );
+    --_with-label-text-active-focus-label-text-color: var(
+      --_navigation-wide-with-label-text-active-focus-label-text-color
+    );
+    --_with-label-text-active-pressed-label-text-color: var(
+      --_navigation-wide-with-label-text-active-pressed-label-text-color
+    );
+  }
+
+  :host([variant~='navigation'][variant~='wide']) .content {
+    flex-direction: var(--_navigation-wide-container-direction);
+  }
+
+  :host([variant~='navigation'][variant~='wide'][variant~='vertical'])
+    .content {
+    justify-content: start;
+    padding-inline: 16px;
+  }
+
+  :host([variant~='navigation'][variant~='wide'][variant~='vertical']) .middle {
+    flex: 1;
+    text-align: initial;
+  }
+
+  :host([variant='none']) {
+    --indicator-block-size: 0;
+  }
+
+  :host,
+  ::slotted(*) {
+    white-space: nowrap;
+  }
+
+  .hidden {
+    opacity: 0;
+  }
+
+  .showing {
+    opacity: 1;
+    transform: none;
+  }
+}
