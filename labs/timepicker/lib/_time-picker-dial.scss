@@ -1,0 +1,17 @@
+@use '../../../internal/sass/theme';
+
+$_custom-property-prefix: 'time-picker';
+
+@mixin theme($tokens) {
+  $tokens: theme.create-theme-vars($tokens, $_custom-property-prefix);
+
+  @include theme.emit-theme-vars($tokens);
+}
+
+@mixin styles() {
+  $tokens: theme.create-theme-vars($tokens, $_custom-property-prefix);
+
+  :host {
+    display: contents;
+  }
+}
